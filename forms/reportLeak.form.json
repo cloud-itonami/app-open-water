@@ -1,0 +1,28 @@
+{
+  "$schema": "https://etzhayyim.com/schemas/camunda-form/v1",
+  "formKey": "openWater.reportLeak.v1",
+  "name": "Report Leak",
+  "version": 1,
+  "lexiconRef": "com.etzhayyim.apps.openWater.reportLeak",
+  "components": [
+    { "key": "mainDid", "label": "Main DID", "type": "textfield",
+      "validate": { "required": true, "pattern": "^did:[a-z]+:.+" } },
+    { "key": "detectedAt", "label": "Detected at (ISO 8601)", "type": "textfield",
+      "validate": { "required": true } },
+    { "key": "estLpm", "label": "Estimated flow (litres/min)", "type": "number",
+      "validate": { "required": true, "min": 0 }, "defaultValue": 0 },
+    { "key": "contaminationRisk", "label": "Contamination risk?", "type": "checkbox",
+      "defaultValue": false },
+    { "key": "pressureLoss", "label": "Distribution pressure loss observed?", "type": "checkbox",
+      "defaultValue": false },
+    { "key": "locationDescription", "label": "Location description", "type": "textfield",
+      "validate": { "maxLength": 256 } },
+    { "key": "description", "label": "Description", "type": "textarea",
+      "validate": { "maxLength": 2048 } }
+  ],
+  "variableMappings": {
+    "mainDid": "mainDid", "detectedAt": "detectedAt", "estLpm": "estLpm",
+    "contaminationRisk": "contaminationRisk", "pressureLoss": "pressureLoss",
+    "locationDescription": "locationDescription", "description": "description"
+  }
+}

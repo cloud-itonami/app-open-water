@@ -1,0 +1,27 @@
+{
+  "viewId": "open-water.OV-1",
+  "viewType": "OV-1",
+  "title": "High-Level Operational Concept Graphic",
+  "did": "did:web:open-water.etzhayyim.com",
+  "format": "json",
+  "content": {
+    "operationalNodes": [
+      { "id": "client",     "label": "Client (planner / utility console / agent)" },
+      { "id": "water",      "label": "open-water.etzhayyim.com (Worker)" },
+      { "id": "store",      "label": "D1 (nodes/mains/readings/leaks/samples SSoT)" },
+      { "id": "pds",        "label": "atproto.etzhayyim.com (PDS, public audit)" },
+      { "id": "regulator",  "label": "Public Health Regulator (DID)" },
+      { "id": "meter",      "label": "Service-point Meter (DID)" }
+    ],
+    "operationalFlows": [
+      { "from": "client",    "to": "water",     "label": "XRPC (defineReservoir / defineMain / reportLeak / recordQualitySample)" },
+      { "from": "meter",     "to": "water",     "label": "XRPC (recordReading)" },
+      { "from": "water",     "to": "store",     "label": "INSERT nodes / mains / readings / leaks / samples" },
+      { "from": "water",     "to": "pds",       "label": "app.bsky.feed.post (severity ≥ major OR quality alarm)" },
+      { "from": "pds",       "to": "regulator", "label": "follow firehose" }
+    ],
+    "narrative": "A planner declares reservoirs and mains. Meters submit periodic readings. Field crews report leaks; severity DMN classifies and gates a public notice for major+ events. Quality samples flag drinking-water alarms."
+  },
+  "refs": { "viewIds": ["open-water.SV-1", "open-water.OV-5b"] },
+  "version": 1
+}

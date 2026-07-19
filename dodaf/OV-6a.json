@@ -1,0 +1,47 @@
+{
+  "viewId": "open-water.OV-6a",
+  "viewType": "OV-6a",
+  "title": "Operational Rules Model",
+  "did": "did:web:open-water.etzhayyim.com",
+  "format": "json",
+  "content": {
+    "businessRules": [
+      {
+        "id": "rule.mainOriginReservoir",
+        "statement": "Every main MUST originate at a reservoir node (nodeType='reservoir').",
+        "kind": "constraint",
+        "enforcedBy": "worker/src/app.ts:defineMain() validation"
+      },
+      {
+        "id": "rule.readingMonotonic",
+        "statement": "Per service point, m³ readings MUST be non-decreasing in time.",
+        "kind": "invariant",
+        "enforcedBy": "worker/src/app.ts:recordReading() validation"
+      },
+      {
+        "id": "rule.leakSeverity",
+        "statement": "leak.severity derived: contaminationRisk → critical; estLpm≥500 OR pressureLoss → major; estLpm≥50 → moderate; else minor. severity ≥ major OR contaminationRisk → public notice.",
+        "kind": "decisionTable",
+        "dmnDecisionKey": "openWater.leakSeverity",
+        "source": "dmn/leak-severity.dmn"
+      },
+      {
+        "id": "rule.qualityAlarm",
+        "statement": "qualityAlarm := residualChlorineMgL < 0.1 OR turbidityNtu > 2.0 OR pH < 5.8 OR pH > 8.6 (WHO drinking-water guideline aligned).",
+        "kind": "invariant",
+        "enforcedBy": "worker/src/app.ts:recordQualitySample() classifier"
+      },
+      {
+        "id": "rule.appendOnlyLeak",
+        "statement": "Leak records are append-only. Resolution updates restored_at via reportLeak with prior leakDid as supersedes.",
+        "kind": "invariant",
+        "enforcedBy": "no UPDATE on leaks.cause/start"
+      }
+    ]
+  },
+  "refs": {
+    "dmnDecisionKeys": ["openWater.leakSeverity"],
+    "viewIds": ["open-water.OV-5b"]
+  },
+  "version": 1
+}

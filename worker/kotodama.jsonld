@@ -1,0 +1,60 @@
+{
+  "@context": "https://etzhayyim.com/ns/kotodama/v1",
+  "@id": "did:web:open-water.etzhayyim.com",
+  "name": "open-water",
+  "handle": "open-water.etzhayyim.com",
+  "performerType": "service",
+  "runtimeType": "worker",
+  "project": "open-water",
+  "convoSystemPrompt": "You are the ETZHAYYIM Open Water agent. You manage potable water network design (reservoirs, mains, service points), meter ingest, and leak/quality reporting. Apply drinking-water safety rules: monotonic m³ readings, leak severity DMN, WHO-aligned residual-chlorine/turbidity/pH alarms.",
+  "governance": {
+    "raci": "responsible",
+    "classification": "operations",
+    "complianceFrameworks": ["who-drinking-water-guideline", "etzhayyim-ops-policy"]
+  },
+  "profile": {
+    "displayName": "ETZHAYYIM Open Water",
+    "description": "Open-source potable-water utility reference implementation — reservoir/main design + meter readings + leak + quality samples (DMN severity, WHO alarms).",
+    "avatar": "💧",
+    "category": "utility",
+    "isBot": true,
+    "operator": "etzhayyim.com",
+    "agentType": "autonomous",
+    "capabilities": [
+      "reservoir-define",
+      "main-define",
+      "node-query",
+      "reading-ingest",
+      "leak-report",
+      "leak-severity-decisioning",
+      "quality-sample-record",
+      "drinking-water-alarm"
+    ]
+  },
+  "triggers": {
+    "subscribeRepos": {
+      "collections": [
+        "app.bsky.feed.post",
+        "com.etzhayyim.apps.openWater.node",
+        "com.etzhayyim.apps.openWater.main",
+        "com.etzhayyim.apps.openWater.meterReading",
+        "com.etzhayyim.apps.openWater.leak",
+        "com.etzhayyim.apps.openWater.qualitySample"
+      ]
+    }
+  },
+  "space": {
+    "name": "ETZHAYYIM Open Water",
+    "description": "Open-source potable-water utility reference implementation",
+    "joinRule": "public",
+    "historyVisibility": "world-readable",
+    "convos": [
+      {
+        "name": "water-ops",
+        "kind": "public",
+        "description": "Public operational events (network changes, severity≥major leaks, drinking-water alarms)",
+        "default": true
+      }
+    ]
+  }
+}

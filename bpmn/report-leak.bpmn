@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="open-water-report-leak"
+                  targetNamespace="https://etzhayyim.com/bpmn/open-water">
+  <bpmn:process id="reportLeak" name="Report Leak" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Init" name="Leak detected"/>
+    <bpmn:sequenceFlow id="f1" sourceRef="StartEvent_Init" targetRef="Task_CollectLeakForm"/>
+    <bpmn:userTask id="Task_CollectLeakForm" name="Collect leak form"
+                   camunda:formKey="openWater.reportLeak.v1"/>
+    <bpmn:sequenceFlow id="f2" sourceRef="Task_CollectLeakForm" targetRef="Task_ClassifyLeak"/>
+    <bpmn:businessRuleTask id="Task_ClassifyLeak" name="Leak severity (DMN)"
+                           camunda:decisionRef="openWater.leakSeverity"/>
+    <bpmn:sequenceFlow id="f3" sourceRef="Task_ClassifyLeak" targetRef="Task_PersistLeak"/>
+    <bpmn:serviceTask id="Task_PersistLeak" name="com.etzhayyim.apps.openWater.reportLeak"
+                      camunda:topic="com.etzhayyim.apps.openWater.reportLeak"/>
+    <bpmn:sequenceFlow id="f4" sourceRef="Task_PersistLeak" targetRef="Gateway_Notice"/>
+    <bpmn:exclusiveGateway id="Gateway_Notice" name="Public notice required?" default="f5b"/>
+    <bpmn:sequenceFlow id="f5a" sourceRef="Gateway_Notice" targetRef="Task_AuditPost">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requirePublicNotice == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="f5b" sourceRef="Gateway_Notice" targetRef="EndEvent_Logged"/>
+    <bpmn:serviceTask id="Task_AuditPost" name="Emit app.bsky.feed.post (public notice)"
+                      camunda:topic="app.bsky.feed.post"/>
+    <bpmn:sequenceFlow id="f6" sourceRef="Task_AuditPost" targetRef="EndEvent_Notified"/>
+    <bpmn:endEvent id="EndEvent_Logged" name="Leak logged"/>
+    <bpmn:endEvent id="EndEvent_Notified" name="Public notice issued"/>
+  </bpmn:process>
+</bpmn:definitions>

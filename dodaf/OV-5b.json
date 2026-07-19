@@ -1,0 +1,44 @@
+{
+  "viewId": "open-water.OV-5b",
+  "viewType": "OV-5b",
+  "title": "Operational Activity Model",
+  "did": "did:web:open-water.etzhayyim.com",
+  "format": "json",
+  "content": {
+    "activities": [
+      { "id": "act.defineReservoir", "name": "Define Reservoir", "type": "xrpc",
+        "realisedBy": [{ "xrpc": "com.etzhayyim.apps.openWater.defineReservoir" }] },
+      { "id": "act.defineMain", "name": "Define Main", "type": "bpmn",
+        "bpmnProcessKey": "defineMain", "source": "bpmn/define-main.bpmn",
+        "realisedBy": [
+          { "xrpc": "com.etzhayyim.apps.openWater.defineMain" },
+          { "form": "openWater.defineMain.v1" }
+        ] },
+      { "id": "act.recordReading", "name": "Record Meter Reading", "type": "xrpc",
+        "realisedBy": [{ "xrpc": "com.etzhayyim.apps.openWater.recordReading" }] },
+      { "id": "act.reportLeak", "name": "Report Leak", "type": "bpmn",
+        "bpmnProcessKey": "reportLeak", "source": "bpmn/report-leak.bpmn",
+        "realisedBy": [
+          { "xrpc": "com.etzhayyim.apps.openWater.reportLeak" },
+          { "form": "openWater.reportLeak.v1" },
+          { "dmn":  "openWater.leakSeverity" }
+        ] },
+      { "id": "act.recordQualitySample", "name": "Record Quality Sample", "type": "xrpc",
+        "realisedBy": [{ "xrpc": "com.etzhayyim.apps.openWater.recordQualitySample" }] },
+      { "id": "act.queryNetwork", "name": "Query Nodes / Mains / Leaks / Quality", "type": "xrpc",
+        "realisedBy": [
+          { "xrpc": "com.etzhayyim.apps.openWater.getNode" },
+          { "xrpc": "com.etzhayyim.apps.openWater.listMains" },
+          { "xrpc": "com.etzhayyim.apps.openWater.listLeaks" },
+          { "xrpc": "com.etzhayyim.apps.openWater.listQualitySamples" }
+        ] }
+    ]
+  },
+  "refs": {
+    "bpmnProcessKeys": ["defineMain", "reportLeak"],
+    "dmnDecisionKeys": ["openWater.leakSeverity"],
+    "formKeys": ["openWater.defineMain.v1", "openWater.reportLeak.v1"],
+    "viewIds": ["open-water.OV-6a", "open-water.SV-1"]
+  },
+  "version": 1
+}

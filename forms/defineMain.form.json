@@ -1,0 +1,32 @@
+{
+  "$schema": "https://etzhayyim.com/schemas/camunda-form/v1",
+  "formKey": "openWater.defineMain.v1",
+  "name": "Define Main",
+  "version": 1,
+  "lexiconRef": "com.etzhayyim.apps.openWater.defineMain",
+  "components": [
+    { "key": "reservoirDid", "label": "Reservoir DID (origin)", "type": "textfield",
+      "validate": { "required": true, "pattern": "^did:[a-z]+:.+" } },
+    { "key": "mainCode", "label": "Main code", "type": "textfield",
+      "validate": { "required": true, "pattern": "^[A-Z0-9-]{2,16}$" } },
+    { "key": "diameterMm", "label": "Nominal diameter DN (mm)", "type": "number",
+      "validate": { "required": true, "min": 25, "max": 3000 }, "defaultValue": 100 },
+    { "key": "material", "label": "Material", "type": "select",
+      "validate": { "required": true },
+      "values": [
+        { "label": "Ductile iron",       "value": "DI"  },
+        { "label": "Steel",              "value": "ST"  },
+        { "label": "PVC",                "value": "PVC" },
+        { "label": "HDPE",               "value": "HDPE"},
+        { "label": "Asbestos cement",    "value": "AC"  }
+      ] },
+    { "key": "lengthM", "label": "Length (m)", "type": "number",
+      "validate": { "required": true, "min": 1 } },
+    { "key": "servicePoints", "label": "Service points (JSON: [{code,name}])", "type": "textarea",
+      "validate": { "required": true } }
+  ],
+  "variableMappings": {
+    "reservoirDid": "reservoirDid", "mainCode": "mainCode", "diameterMm": "diameterMm",
+    "material": "material", "lengthM": "lengthM", "servicePoints": "servicePoints"
+  }
+}

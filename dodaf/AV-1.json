@@ -1,0 +1,32 @@
+{
+  "viewId": "open-water.AV-1",
+  "viewType": "AV-1",
+  "title": "Overview and Summary Information",
+  "did": "did:web:open-water.etzhayyim.com",
+  "format": "json",
+  "content": {
+    "purpose": "Provide a DID-addressed water utility operations service (reservoir/main design + meter readings + leak/quality reporting) as an auditable, open-source reference implementation.",
+    "scope": {
+      "in": ["reservoir + main topology", "meter reading ingest", "leak reporting + severity DMN", "quality sample ingest"],
+      "out": ["EPANET hydraulic modeling", "DMA/pressure-zone control", "tariff & NRW analytics"]
+    },
+    "architectureDescriptionContext": {
+      "mission": "Provide tamper-evident, DID-native potable water primitives open to any AT Protocol client.",
+      "stakeholders": ["water utilities", "service-point owners (DIDs)", "public health regulators", "field crews"],
+      "environment": "Cloudflare Workers + D1",
+      "standards": ["AT Protocol XRPC", "DoDAF v2.02", "BPMN 2.0", "DMN 1.3", "Camunda Forms", "WHO Drinking-Water Quality Guidelines (residual Cl, turbidity)"]
+    },
+    "toolsAndMethods": [
+      "XRPC Lexicons for external contracts (com.etzhayyim.apps.openWater.*)",
+      "BPMN 2.0 for process definition (defineMain, reportLeak)",
+      "DMN 1.3 for decision rules (leakSeverity)",
+      "Camunda Forms for human-task UI"
+    ],
+    "findings": "Topology = directed reservoir → service-point edges sufficient for branched distribution. Severity DMN auto-routes public notices. Quality samples enable residual-chlorine/turbidity audit.",
+    "recommendations": "Add EPANET integration for hydraulic simulation; add automated valve closure on critical leak; introduce DMA-level NRW reporting."
+  },
+  "refs": {
+    "viewIds": ["open-water.OV-1", "open-water.OV-5b", "open-water.OV-6a", "open-water.CV-2", "open-water.SV-1"]
+  },
+  "version": 1
+}

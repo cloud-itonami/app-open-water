@@ -1,0 +1,43 @@
+{
+  "viewId": "open-water.CV-2",
+  "viewType": "CV-2",
+  "title": "Capability Taxonomy",
+  "did": "did:web:open-water.etzhayyim.com",
+  "format": "json",
+  "content": {
+    "capabilities": [
+      {
+        "id": "cap.networkDesign", "name": "Network design",
+        "children": [
+          { "id": "cap.reservoirDefine", "name": "Define reservoir", "realisedBy": "com.etzhayyim.apps.openWater.defineReservoir" },
+          { "id": "cap.mainDefine",      "name": "Define main",      "realisedBy": "com.etzhayyim.apps.openWater.defineMain" },
+          { "id": "cap.nodeQuery",       "name": "Query node",       "realisedBy": "com.etzhayyim.apps.openWater.getNode" },
+          { "id": "cap.mainList",        "name": "List mains",       "realisedBy": "com.etzhayyim.apps.openWater.listMains" }
+        ]
+      },
+      {
+        "id": "cap.metering", "name": "Metering",
+        "children": [
+          { "id": "cap.readingIngest", "name": "Ingest reading", "realisedBy": "com.etzhayyim.apps.openWater.recordReading" }
+        ]
+      },
+      {
+        "id": "cap.integrity", "name": "Integrity / leaks",
+        "children": [
+          { "id": "cap.leakReport",   "name": "Report leak",        "realisedBy": "com.etzhayyim.apps.openWater.reportLeak" },
+          { "id": "cap.leakSeverity", "name": "Severity decisioning", "realisedBy": "openWater.leakSeverity (DMN)" },
+          { "id": "cap.leakList",     "name": "List leaks",         "realisedBy": "com.etzhayyim.apps.openWater.listLeaks" }
+        ]
+      },
+      {
+        "id": "cap.quality", "name": "Drinking-water quality",
+        "children": [
+          { "id": "cap.qualityRecord", "name": "Record sample", "realisedBy": "com.etzhayyim.apps.openWater.recordQualitySample" },
+          { "id": "cap.qualityList",   "name": "List samples",  "realisedBy": "com.etzhayyim.apps.openWater.listQualitySamples" }
+        ]
+      }
+    ]
+  },
+  "refs": { "viewIds": ["open-water.OV-5b", "open-water.SV-1"] },
+  "version": 1
+}

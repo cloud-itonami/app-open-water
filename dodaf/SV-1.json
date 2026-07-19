@@ -1,0 +1,39 @@
+{
+  "viewId": "open-water.SV-1",
+  "viewType": "SV-1",
+  "title": "Systems Interface Description",
+  "did": "did:web:open-water.etzhayyim.com",
+  "format": "json",
+  "content": {
+    "systems": [
+      {
+        "id": "sys.worker", "name": "open-water Worker",
+        "platform": "Cloudflare Workers", "entrypoint": "worker/src/app.ts",
+        "interfaces": [
+          { "id": "if.xrpc.defineReservoir",       "kind": "XRPC", "method": "POST", "nsid": "com.etzhayyim.apps.openWater.defineReservoir" },
+          { "id": "if.xrpc.defineMain",            "kind": "XRPC", "method": "POST", "nsid": "com.etzhayyim.apps.openWater.defineMain" },
+          { "id": "if.xrpc.getNode",               "kind": "XRPC", "method": "GET",  "nsid": "com.etzhayyim.apps.openWater.getNode" },
+          { "id": "if.xrpc.listMains",             "kind": "XRPC", "method": "GET",  "nsid": "com.etzhayyim.apps.openWater.listMains" },
+          { "id": "if.xrpc.recordReading",         "kind": "XRPC", "method": "POST", "nsid": "com.etzhayyim.apps.openWater.recordReading" },
+          { "id": "if.xrpc.reportLeak",            "kind": "XRPC", "method": "POST", "nsid": "com.etzhayyim.apps.openWater.reportLeak" },
+          { "id": "if.xrpc.listLeaks",             "kind": "XRPC", "method": "GET",  "nsid": "com.etzhayyim.apps.openWater.listLeaks" },
+          { "id": "if.xrpc.recordQualitySample",   "kind": "XRPC", "method": "POST", "nsid": "com.etzhayyim.apps.openWater.recordQualitySample" },
+          { "id": "if.xrpc.listQualitySamples",    "kind": "XRPC", "method": "GET",  "nsid": "com.etzhayyim.apps.openWater.listQualitySamples" }
+        ]
+      },
+      { "id": "sys.d1", "name": "Cloudflare D1 (SQLite)", "platform": "D1",
+        "tables": ["nodes", "mains", "meter_readings", "leaks", "quality_samples"] },
+      { "id": "sys.pds",  "name": "atproto.etzhayyim.com PDS", "platform": "Service binding",
+        "interfaces": [{ "id": "if.pds.post", "kind": "wRPC", "method": "app.bsky.feed.post" }] },
+      { "id": "sys.auth", "name": "auth.etzhayyim.com", "platform": "Service binding",
+        "interfaces": [{ "id": "if.auth.resolveCaller", "kind": "wRPC", "method": "resolveCallerDid" }] }
+    ],
+    "connections": [
+      { "from": "sys.worker", "to": "sys.d1",   "protocol": "D1 binding" },
+      { "from": "sys.worker", "to": "sys.pds",  "protocol": "Service binding (wRPC)" },
+      { "from": "sys.worker", "to": "sys.auth", "protocol": "Service binding (wRPC)" }
+    ]
+  },
+  "refs": { "viewIds": ["open-water.OV-1", "open-water.CV-2"] },
+  "version": 1
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="open-water-define-main"
+                  targetNamespace="https://etzhayyim.com/bpmn/open-water">
+  <bpmn:process id="defineMain" name="Define Water Main" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Init" name="Network design request"/>
+    <bpmn:sequenceFlow id="f1" sourceRef="StartEvent_Init" targetRef="Task_CollectMainForm"/>
+    <bpmn:userTask id="Task_CollectMainForm" name="Collect main form"
+                   camunda:formKey="openWater.defineMain.v1"/>
+    <bpmn:sequenceFlow id="f2" sourceRef="Task_CollectMainForm" targetRef="Task_DefineMain"/>
+    <bpmn:serviceTask id="Task_DefineMain" name="com.etzhayyim.apps.openWater.defineMain"
+                      camunda:topic="com.etzhayyim.apps.openWater.defineMain"/>
+    <bpmn:sequenceFlow id="f3" sourceRef="Task_DefineMain" targetRef="EndEvent_Defined"/>
+    <bpmn:endEvent id="EndEvent_Defined" name="Main defined"/>
+  </bpmn:process>
+</bpmn:definitions>
