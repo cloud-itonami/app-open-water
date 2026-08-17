@@ -1,0 +1,12 @@
+# docs/operator-quickstart.md の手順を踏むと生成されるもの。
+# 手順を追加した時点で git status に出るようになったので、その 6 種だけを対象にする。
+node_modules/
+.svelte-kit/
+.wrangler/
+
+# ⚠ lockfile を無視するのは「決めた」のではなく「まだ決めていない」ということ。
+# 現状この repo の依存の固定は package.json の git SHA（#12314a0c… / #c857ff9b…）
+# だけが担っており、npm registry 側の依存は固定されていない。lockfile を commit
+# するかどうかは substrate 側の判断なので、ここでは触らずギャップとして残す
+# （README §3 と同じ扱い）。
+package-lock.json
