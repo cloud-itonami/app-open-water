@@ -1,11 +1,16 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "etzhayyim-open-water",
-  "main": "svelte/.svelte-kit/cloudflare/_worker.js",
+  // Compiled from src/open_water/worker.cljs by shadow-cljs (:target :esm).
+  // Before the cljs migration this pointed at "svelte/.svelte-kit/cloudflare/_worker.js"
+  // -- a SvelteKit build output that is not in the tree -- and the TypeScript a
+  // reader opened (worker/src/app.ts, 468 lines) was in no bundle at all.
+  // See docs/adr/0001.
+  "main": "../dist/worker.js",
   "compatibility_date": "2026-04-20",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  // "compatibility_flags": ["nodejs_compat"] was adapter-cloudflare's requirement.
+  // Removed after verifying in workerd (`wrangler dev --local`) that every route
+  // still answers without it -- see docs/operator-quickstart.md S4.6.
   "account_id": "4da88288dc30d9ee257f319d3c33ecf0",
   "workers_dev": false,
   "routes": [
@@ -17,16 +22,12 @@
   "vars": {
     "APP_HANDLE": "open-water.etzhayyim.com",
     "PRIMARY_DID": "did:web:open-water.etzhayyim.com",
-    "APP_FRAMEWORK": "sveltekit-edge-bff",
+    "APP_FRAMEWORK": "cljs-esm-worker",
     "AGENTGATEWAY_MCP_ROUTER_URL": "https://mcp.etzhayyim.com/xrpc/com.etzhayyim.mcp.message"
   },
   "observability": {
     "enabled": true
-  },
-  "assets": {
-    "directory": "./svelte/.svelte-kit/cloudflare/client",
-    "binding": "ASSETS",
-    "html_handling": "auto-trailing-slash",
-    "not_found_handling": "none"
   }
+  // The "assets" block pointed at ./svelte/.svelte-kit/cloudflare/client, which
+  // the SvelteKit build produced and which no longer exists. Removed.
 }

@@ -1,255 +1,372 @@
-# operator quickstart — app-open-water
+# operator-quickstart
 
-**この手順は 2026-08-18 に clean-room で上から下まで実走して書いた。** clean-room =
-`kotoba/node_modules` `kotoba/package-lock.json` `worker/svelte/node_modules`
-`worker/svelte/package-lock.json` `worker/svelte/.svelte-kit` `worker/.wrangler` を
-全部消した状態。載っている数値は全部そのときの実測値である。
+**この repo で今日実際にできることを、踏める形で上から書く。** 所要 5 分。
+Cloudflare のアカウントは要らない（deploy だけが要る。§8）。
 
-背景と、この repo の現状（実装が 2 つ在ってデプロイされるのはどちらでもない、という
-話）は [`../README.md`](../README.md)。
+出力はすべて 2026-08-19 に実際に walk した結果である。
 
----
+## 0. 前提
 
-## 0. 前提 —— この端末固有の罠が 2 つある
-
-どちらも repo の欠陥ではない。**ここで詰まったら repo を疑わないこと。**
-
-### 0-1. `npm install` が `EALLOWSCRIPTS` で落ちる
-
-```
-npm error code EALLOWSCRIPTS
-npm error --allow-scripts is not allowed in project-scoped installs.
-```
-
-`~/.npmrc` の `allow-scripts[]=…` が **git 依存の準備 install に漏れる**（npm 11.16.0）。
-`@etzhayyim/sdk` は git 依存なので必ず踏む。空の userconfig で隔離すれば通る:
-
-```bash
-: > /tmp/empty-npmrc
-npm install --userconfig /tmp/empty-npmrc
-```
-
-以降このドキュメントの `npm` は全てこの `--userconfig` を付ける前提で書く
-（あるいは `export npm_config_userconfig=/tmp/empty-npmrc`）。
-
-### 0-2. `resource-guard.mjs` に `VAR=… cmd` を渡すと ENOENT
-
-superproject の resource governor は `spawnSync` で第 1 引数をコマンド名にするので、
-`VAR=x npm run build` を渡すと `VAR=x` というコマンドを探して落ちる。**先に export する。**
-
-### 実測した版
-
-```
-node 26.3.0 / npm 11.16.0 / wrangler 4.123.0（worker/svelte/node_modules/.bin）
-```
-
----
-
-## 1. `kotoba/` —— 唯一テストが在る面
-
-```bash
-cd kotoba
-npm install --userconfig /tmp/empty-npmrc     # exit 0 / 195 秒 / node_modules 75 entries
-npm run typecheck                             # exit 0（tsc --noEmit、出力なし）
-npm test                                      # exit 0
-```
-
-`npm test` の実測:
-
-```
- RUN  v4.1.10
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-   Duration  316ms
-```
-
-**195 秒の大半は `@etzhayyim/sdk` とその依存の準備ビルドである** —— `sdk` /
-`atproto-client` / `base-l2` / `checkpointer` / `ipfs` / `pqh` / `witness-quorum` の
-**7 パッケージが `prepare: tsc`** を走らせる（加えて `@signalapp/libsignal-client` が
-install script を持つ）。2 回目以降はキャッシュが効く。
-
----
-
-## 2. `worker/svelte/` —— デプロイされる面
-
-```bash
-cd worker/svelte
-npm install --userconfig /tmp/empty-npmrc     # exit 0 / 9 秒 / node_modules 71 entries
-
-export npm_config_userconfig=/tmp/empty-npmrc
-node <superproject>/scripts/resource-guard.mjs run build -- npm run build
-                                              # exit 0 / built in 4.00s
-npm run check                                 # exit 0
-```
-
-`npm run check` の実測:
-
-```
-COMPLETED 163 FILES 0 ERRORS 0 WARNINGS 0 FILES_WITH_PROBLEMS
-```
-
-ビルド成果物:
-
-```
-.svelte-kit/cloudflare/_worker.js        4,335 B
-.svelte-kit/cloudflare/client/           _app/ と _headers
-```
-
-**`_worker.js` が 4 KB 台であることが、この repo の中心的な事実である** ——
-`worker/src/app.ts`（24,069 B）はここに入っていない。`wrangler.jsonc` の `main` は
-`svelte/.svelte-kit/cloudflare/_worker.js` を指していて、`src/` を指していない。
-
-> ビルド中に `PLUGIN_TIMINGS` の警告と、assets ディレクトリの watch 数に関する
-> 警告が出るが、どちらも exit 0 を妨げない。
-
----
-
-## 3. ローカルで起動して route を測る
-
-`wrangler.jsonc` は `worker/` に在るので、そこから起動する。**ポートは他のセッションと
-衝突しないものを選ぶ**（この端末では並行して複数の agent が走る）。
-
-```bash
-cd worker
-./svelte/node_modules/.bin/wrangler dev --local --port 8814 --ip 127.0.0.1
-```
-
-`[wrangler:info] Ready on http://127.0.0.1:8814` が出たら、別の shell から:
-
-| リクエスト | 実測 | 中身 |
+| 要るもの | 確認 | この walk で使った版 |
 |---|---|---|
-| `GET /` | **200** | 雛形ページ。`<title>` は `worker` |
-| `GET /health` | **404** | SvelteKit の 404 ページ（HTML） |
-| `GET /_worker/health` | **404** | |
-| `GET /_app/meta` | **404** | `Not found`（テキスト） |
-| `GET /dodaf` | **404** | |
-| `GET /forms` | **404** | |
-| `GET /xrpc/<nsid>` | **405** | `GET method not allowed` |
-| `OPTIONS /xrpc/anything` | **204** | CORS preflight。ボディ無し |
-| `POST /xrpc/<nsid>` | **500** | `{"message":"Internal Error"}` |
+| git | `git --version` | 2.51.0 |
+| nbb | `npx --yes nbb --version` | v1.4.210 |
+| node | `node --version` | v26.3.0 |
+| clojure | `clojure --version` | ビルド時のみ |
+
+## 1. 取得して、書いてあることが本当か検査する
 
 ```bash
-B=http://127.0.0.1:8814
-curl -s -o /dev/null -w '%{http_code}\n' "$B/"
-curl -s -o /dev/null -w '%{http_code}\n' "$B/health"
-curl -s -w '\n%{http_code}\n' -X POST "$B/xrpc/com.etzhayyim.apps.openWater.listMains" \
-  -H 'content-type: application/json' -d '{}'
-curl -s -o /dev/null -w '%{http_code}\n' -X OPTIONS "$B/xrpc/anything"
+git clone git@github.com:cloud-itonami/app-open-water.git
+cd app-open-water
+REPO=$PWD
+npx --yes nbb scripts/verify-docs-claims.cljs .
 ```
 
-**500 の原因は repo の外に在る。** wrangler のログにスタックが出る:
+実際の出力（末尾）:
 
 ```
-[500] POST /xrpc/com.etzhayyim.apps.openWater.listMains
-Error: internal error; reference = …
-    at async POST (…/entries/endpoints/xrpc/_...path_/_server.ts.js:27:19)
+SCANNED	35
+PASS	tracked-files	expected=35	actual=35
+PASS	preserved-files-unchanged	expected=[]	actual=[]
+PASS	removed-by-migration-absent	expected=[]	actual=[]
+PASS	appview-svelte-artifacts	expected=0	actual=0
+PASS	appview-ts-files	expected=0	actual=0
+PASS	appview-canonical-files	expected=4	actual=4
+PASS	kotoba-files	expected=7	actual=7
+PASS	kotoba-ts-files	expected=5	actual=5
+PASS	declaration-files	expected=11	actual=11
+PASS	claude-md-describes-cljs	expected=true	actual=true
+PASS	wrangler-main	expected="../dist/worker.js"	actual="../dist/worker.js"
+PASS	declared-vars	expected=4	actual=4
+PASS	declared-routes	expected=1	actual=1
+PASS	no-stale-assets-binding	expected=true	actual=true
+PASS	sveltekit-compat-flags	expected=0	actual=0
+PASS	app-framework-not-sveltekit	expected=true	actual=true
+PASS	shadow-builds-that-main	expected=true	actual=true
+PASS	warnings-as-errors-in-compiler-options	expected=true	actual=true
+PASS	warnings-as-errors-not-misplaced	expected=true	actual=true
+PASS	page-renders-route-table	expected=true	actual=true
+PASS	adr-is-tx-data	expected=true	actual=true
+OK	every claim in README.md and docs/operator-quickstart.md holds
 ```
 
-`+server.ts` の `fetch(mcpRouterUrl(...))` が `https://mcp.etzhayyim.com/…` を叩き、
-そのホストが解決しない（§4）。**`/health` の 404 と合わせて、この Worker には
-「上流が死んでいる」ことを外から確かめる手段が無い。**
+末尾が `OK` なら README の数値・存在・不在は tree と一致している。
+**exit 2（UNDETERMINED）は 0 ではない** —— tree を読み切れなかったという別の
+答えで、「検査して問題なし」と混ぜない。
 
-終了したら `Ctrl-C`。ポートが解放されたことを `lsof -ti:8814` で確認する
-（起動時に `EMFILE`（fd 上限）警告が出ることがあるが、サーバは起動する）。
+この検査には移行の不変条件が入っている: appview に TypeScript / Svelte が戻って
+いないこと（撤去した 10 パスの不在 + 拡張子の総数）、`worker/wrangler.jsonc` の
+`main` が shadow の出力先を指していること、ページが route 表から描かれていること、
+`kotoba/` を触っていないこと（7 ファイルの sha256）、そして
+**`:warnings-as-errors` が `:compiler-options` に在って `:build-options` に無い
+こと**（grep ではなく EDN として parse して見る。§7 M2）。
 
----
+## 2. テストを走らせる（ビルド不要・ブラウザ不要）
 
-## 4. DNS —— デプロイの前提が 2 つとも欠けている
+判断（`route.cljc`）と描画（`view.cljc`）は純 `.cljc` なので、nbb だけで回る。
 
 ```bash
-for h in open-water.etzhayyim.com mcp.etzhayyim.com etzhayyim.com; do
-  printf '%-30s ' "$h"; dig +short "$h" A | tr '\n' ' '; echo
-done
+K=~/github/com-junkawasaki/orgs/kotoba-lang
+CP="src:test:$K/jp-go-digital-design-system/src:$K/html/src:$K/css/src"
+cat > /tmp/run.cljs <<'EOF'
+(require '[cljs.test :refer [run-tests]] 'open-water.route-test)
+(run-tests 'open-water.route-test)
+EOF
+npx --yes nbb --classpath "$CP" /tmp/run.cljs
 ```
 
-実測（2026-08-18）:
+実際の出力:
 
 ```
-open-water.etzhayyim.com       (空)
-mcp.etzhayyim.com              (空)
-etzhayyim.com                  104.21.51.111 172.67.179.128
+Testing open-water.route-test
+
+Ran 6 tests containing 30 assertions.
+0 failures, 0 errors.
 ```
 
-対照の `etzhayyim.com` は `GET /` が 200 を返す。**つまり zone は生きていて、
-この 2 つのホストだけが未作成である。**
+何を固定しているか: `/xrpc/` は**空の nsid だけ** 400 にする（`/xrpc/a/b` は
+移行前の rest parameter `[...path]` と同じく転送する。1 セグメントに絞るのは
+移行ではなく方針変更）、MCP router の URL 解決（空白だけの設定は未設定として
+扱う）、`result` / `structuredContent` の剥がし方、移していない面
+（`/_app/meta` `/dodaf` `/forms`）が 404 のままであること、そして
+**ページが route 表から描かれること**（固定値を焼いていたら落ちる）。
 
-- `open-water.etzhayyim.com` —— `wrangler.jsonc` の `routes[0].pattern`。無いと
-  デプロイしても誰も到達できない。
-- `mcp.etzhayyim.com` —— `vars.AGENTGATEWAY_MCP_ROUTER_URL` の転送先。無いと
-  `POST /xrpc/…` は 500 のまま。
+## 3. ページを描画して採点する
 
----
+```bash
+K=~/github/com-junkawasaki/orgs/kotoba-lang
+CP="src:$K/jp-go-digital-design-system/src:$K/html/src:$K/css/src"
+cat > /tmp/render.cljs <<'EOF'
+(require '["node:fs" :as fs] '[open-water.view :as view] '[open-water.route :as route])
+(let [css (.readFileSync fs (str (.-DDS js/process.env) "/resources/jp_go_dds/dds.css") "utf8")]
+  (.writeFileSync fs "/tmp/ow-page.html"
+    (view/render {:css css :routes route/routes
+                  :vars [:AGENTGATEWAY_MCP_ROUTER_URL :APP_FRAMEWORK :APP_HANDLE :PRIMARY_DID]
+                  :mcp-url "https://mcp.etzhayyim.com/xrpc/com.etzhayyim.mcp.message"}))
+  (println "ok"))
+EOF
+DDS="$K/jp-go-digital-design-system" npx --yes nbb --classpath "$CP" /tmp/render.cljs
 
-## 5. デプロイ —— **できない**
+cd $K/design-quality && npx --yes nbb -m design-quality.cli score /tmp/ow-page.html --min 95
+```
 
-`wrangler deploy` は打たないこと。前提が 3 つ欠けている:
+実際の出力（末尾）:
 
-1. §4 の DNS 2 件
-2. `wrangler.jsonc` に `d1_databases` が **0 件**（`app.ts` は `WATER_DB` を要求する）
-3. そもそも `app.ts` は `main` の指す先に入っていない —— デプロイしても
-   9 XRPC は 1 本も生えない
+```
+  100.00  /tmp/ow-page.html
+aggregate: 100.00
 
-なお superproject の PreToolUse フック（`wrangler-deploy-main-sync-guard`）は、
-`origin/main` より遅れた checkout からの `wrangler deploy` を deny する。
-`--dry-run` と `--env <name>` はブロックされない。
+axes scored: 10 (viewport, safe-area, dynamic-viewport, tap-targets, focus-visible, reduced-motion, overflow-guard, color-scheme, responsive, semantics)
+NOT scored: input-zoom, contrast — pass --extra-axes to include the optional ones
+A pass says nothing about an axis that was not applied.
 
----
+gate: aggregate 100.00 >= min 95.00 -> PASS
+```
 
-## 6. テストがまだ discriminate することを確かめる
+**CLI が自分で「10 軸しか当てていない」と言っている。読むこと。** 12 軸すべてで
+測るなら `--extra-axes` を付ける（このページはそれでも `100.00`、
+`axes scored: 12`）。
 
-**「6 passed」は、それ自体では何も証明しない。** 不変条件を 1 つ壊して、対応する
-テストだけが赤くなることを見る。README §4 の 6 件を再現するには、下の変更を
-1 つずつ当てて `npm test` し、**毎回 `git checkout` で戻す**:
+**このスコアはデザインシステムが実際に入っているかを見ていない。** 同型の repo
+での実測では、デザインシステムを完全に外したページも **96.63 で `--min 95` を
+通る**。「CSS が入っている」と言えるのは §5 の smoke の 2 本目だけである。
 
-| # | ファイル | 消す（または変える）行 | 赤くなるべきテスト |
+## 4. bundle をビルドする
+
+**高負荷ビルドは同時 1 本に制限されている**（superproject `CLAUDE.md` の
+resource governor）。直接叩かず、必ず guard 経由で:
+
+```bash
+cd "$REPO"
+node ~/github/com-junkawasaki/scripts/resource-guard.mjs run build -- \
+  npx --yes shadow-cljs release worker
+ls -la dist/worker.js
+```
+
+lock を他セッションが持っていると exit 2 で拒否される。**迂回しない** ——
+`resource-guard: build is already running (pid=…)` はエラーではなく順番待ちで
+ある（この walk でも 2 回待った）。
+
+実際の出力（末尾）:
+
+```
+[:worker] Build completed. (55 files, 12 compiled, 0 warnings, 5.57s)
+```
+
+`dist/worker.js` = **246,372 バイト**、
+sha256 `ffa5259a04a59627414e7642f69f7059e31cb280193238f643f8665a67bddb8b`。
+
+> **⚠ sha256 を比べるなら `rm -rf .shadow-cljs` してから。** shadow-cljs の
+> `:esm` 出力がバイト再現するのは**冷えたキャッシュからだけ**で、バイト同一の
+> ソースからの差分ビルドは安定して**違うバイト**を出す。この walk では 5 回の
+> cold rebuild すべてが上の sha に一致した。
+
+### 壊れた var はビルドを **落とす**
+
+`shadow-cljs.edn` の `:compiler-options` に `:warnings-as-errors true` が入って
+いる。入れなければ、存在しない var を参照しても shadow は **WARNING** を出して
+**exit 0** し、壊れた bundle を書く ——「ビルドが通った」は検査ではない
+（**落ちようがない**）。この repo で実際に落として確かめた（§7 M8）。
+
+キーは `:build-options` ではなく **`:compiler-options`** に置く。shadow が読むのは
+`[:compiler-options :warnings-as-errors]` で、置き場所を間違えると**黙って無視
+される** —— この option が防ぐはずの失敗そのものになる。検証器はこれを
+**EDN として parse して**見る（§7 M2 が理由）。
+
+## 5. ビルドした成果物を実際に叩く
+
+ここが deploy されるものに触る唯一の検査である。
+
+```bash
+cd "$REPO" && npx --yes nbb scripts/smoke-worker.cljs dist/worker.js
+```
+
+実際の出力:
+
+```
+PASS	default export has fetch	expected=true	actual=true
+PASS	GET / status	expected=200	actual=200
+PASS	GET / is html	expected=true	actual=true
+PASS	page advertises /health	expected=true	actual=true
+PASS	page advertises /xrpc/:nsid	expected=true	actual=true
+PASS	page advertises /xrpc/*	expected=true	actual=true
+PASS	page is not the SvelteKit scaffold	expected=false	actual=false
+PASS	page shows a var key	expected=true	actual=true
+PASS	page hides other var values	expected=false	actual=false
+PASS	page shows the relay target it uses	expected=true	actual=true
+PASS	page uses the design system components	expected=true	actual=true
+PASS	page carries the stylesheet itself	expected=true	actual=true
+PASS	GET /health status	expected=200	actual=200
+PASS	health names its routes	expected=true	actual=true
+PASS	POST /xrpc/ status	expected=400	actual=400
+PASS	POST /xrpc/ keeps the old message	expected=true	actual=true
+PASS	OPTIONS preflight	expected=204	actual=204
+PASS	unknown path	expected=404	actual=404
+PASS	wrong method	expected=405	actual=405
+PASS	unported app.ts surface stays 404	expected=404	actual=404
+OK	the built bundle answers as the route table says
+```
+
+**bundle が無ければ exit 2**（「判定できなかった」であって合格ではない）:
+
+```
+$ npx --yes nbb scripts/smoke-worker.cljs dist/nonexistent.js ; echo $?
+UNDETERMINED	no bundle at /…/dist/nonexistent.js
+Refusing to report a pass: build it first (see docs/operator-quickstart.md S4).
+2
+```
+
+## 6. Workers ランタイム（workerd）で動かす
+
+Node で import する smoke より強い検査。実際の workerd で起こす。
+
+```bash
+cd "$REPO/worker"
+npx --yes wrangler@latest dev --local --port 8811 --ip 127.0.0.1
+# 別シェルで
+B=http://127.0.0.1:8811
+curl -s -o /dev/null -w '%{http_code} %{content_type}\n' $B/
+curl -s $B/health; echo
+curl -s -X POST $B/xrpc/; echo
+curl -s -o /dev/null -w '%{http_code}\n' -X OPTIONS $B/xrpc/x
+curl -s -o /dev/null -w '%{http_code}\n' $B/nope
+curl -s -o /dev/null -w '%{http_code}\n' -X POST $B/health
+curl -s -o /dev/null -w '%{http_code}\n' $B/dodaf
+curl -s -X POST -H 'content-type: application/json' -d '{}' \
+  $B/xrpc/com.etzhayyim.apps.openWater.listMains; echo
+curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'content-type: application/json' -d '{}' $B/xrpc/a/b
+```
+
+実際の出力:
+
+```
+200 text/html; charset=utf-8
+{"ok":true,"app":"open-water","runtime":"cljs","routes":["/","/health","/xrpc/:nsid","/xrpc/*"]}
+{"error":"Missing XRPC method"}
+204
+404
+405
+404
+{"error":"MCP router unreachable","detail":"internal error; reference = lrv2vur9obk8fm43js6f5p19","url":"https://mcp.etzhayyim.com/xrpc/com.etzhayyim.mcp.message"}
+502
+```
+
+読み方:
+
+- `GET /` の本文には `dads-table` と `--color-primitive-blue` と `/xrpc/:nsid` が
+  在る（grep で確認済み）
+- `GET /dodaf` は **404**。`app.ts` の面は移していないので、移行前と同じ
+- `/xrpc/…` は **502 で、行こうとした URL を応答に載せる**。`mcp.etzhayyim.com` が
+  NXDOMAIN だからで、これは今日の既定の結末である
+- **`/xrpc/a/b` も 502** —— 多段パスは単一セグメントと同一に扱われる（移行前と同じ）
+
+`compatibility_flags`（`nodejs_compat`）は SvelteKit の adapter-cloudflare 由来で、
+この bundle には要らない。**撤去は憶測ではなくこの実測で確かめてから行った。**
+
+## 7. gate が本当に落ちることの実測（11 の mutation）
+
+**緑を受け取る前に、対応する検査が赤くなるところを見た。** 1 つずつ当てて、
+観察して、戻した（2 つ同時に当てると互いを隠しうる）。
+
+| # | 壊したもの | 赤くなったもの | 巻き添え |
 |---|---|---|---|
-| A | `kotoba/src/types.ts` | `if (input.contaminationRisk) return { severity: "critical", …};` | `classifies severity …` |
-| B | `kotoba/src/registry.ts` | `defineMain` の `if (!(await exists(e, RESERVOIR_COLLECTION, …)))` ブロック | `rejects bad diameter/material/length …` |
-| C | `kotoba/src/types.ts` | `input.pHCenti > 860;` を落として `input.pHCenti < 580;` で終える | `alarms on low chlorine …` |
-| D | `kotoba/src/registry.ts` | `if (input.since && v.detectedAt < input.since) return false;` | `rejects missing main + filters …` |
-| E | `kotoba/src/registry.ts` | `leaksBySeverity[v.severity] = …` | `coverage rolls up all four registries` |
-| F | `kotoba/src/registry.ts` | `if (input.material && v.material !== input.material) return false;` | `defines reservoir + a main over it` |
+| M1 | 撤去した `worker/src/app.ts` が戻る | `tracked-files` / `removed-by-migration-absent` / `appview-ts-files` | なし |
+| M1b | **撤去リストに無い名前**の `.ts`（`worker/lib/helper.ts`）が入る | `tracked-files` / `appview-ts-files` | なし |
+| M2 | `:warnings-as-errors` を `:build-options` へ移す | `warnings-as-errors-in-compiler-options` / `warnings-as-errors-not-misplaced` | なし |
+| M3 | `wrangler.jsonc` の `main` を SvelteKit 出力に戻す | `wrangler-main` / `shadow-builds-that-main` | なし |
+| M4 | `kotoba/src/index.ts` に 1 行足す | `preserved-files-unchanged` | なし |
+| M5 | `compatibility_flags: ["nodejs_compat"]` が戻る | `sveltekit-compat-flags` | なし |
+| M6 | view が route 表でなく固定値を描く | test 4 assertion + `page-renders-route-table` | なし |
+| M7 | `/xrpc/a/b` を 400 に絞る（＝方針変更） | test `dispatch-xrpc` 1 件 | なし |
+| M8 | `route/dispatch` を存在しない var に改名 | **ビルドが exit 1** | なし |
+| M9 | `(rc/inline "jp_go_dds/dds.css")` → `""` | smoke `page carries the stylesheet itself` のみ | なし |
+| M10 | worker が env のキーでなく**値**を渡す | smoke `page hides other var values` のみ | なし |
+| M11 | ページが中継先を出さなくなる | smoke `page shows the relay target it uses` のみ | なし |
 
-期待する形は毎回:
+### M2 が一番重要（grep なら緑のままだった）
+
+`:warnings-as-errors true` という**文字列は依然としてファイルに在る** ——
+`:build-options` の下に。grep ベースの検査はこれを緑と答える。検証器は EDN として
+parse して `[:builds :worker :compiler-options :warnings-as-errors]` を見るので
+赤くなり、加えて `[:builds :worker :build-options :warnings-as-errors]` が
+**在ること**も別の claim で赤くなる。
+
+### M8 — 落ちたビルドは bundle を出荷しない
 
 ```
-Tests  1 failed | 5 passed (6)
- × <上の表の 1 つだけ>
+------ ERROR -------------------------------------------------------------------
+Use of undeclared Var open-water.route/dispatch-nonexistent
+{:warning :undeclared-var, :line 127, :column 45, …, :shadow.build.compiler/warning-as-error true}
 ```
 
-**2 つ以上赤くなったら、壊した場所と報告が一致していない**（変異が別の不変条件を
-巻き込んでいる）。**1 つも赤くならなかったら、そのテストは何も守っていない。**
+| | exit | `dist/worker.js` sha256 | bytes |
+|---|---|---|---|
+| 改名前 | **0** | `ffa5259a…67bddb8b` | 246372 |
+| 改名後 | **1** | `ffa5259a…67bddb8b`（**不変**） | 246372 |
+| 戻して cold rebuild | **0** | `ffa5259a…67bddb8b` | 246372 |
 
-復元の確認は 2 段階でやる:
+sha256 が 1 バイトも動いていないことが「出荷しなかった」を言っている。
+
+### M9 — デザインシステムの検査を 2 本に割った理由
+
+`dads-table` が在ることは**落ちない検査**である。実測（この repo のページ）:
+
+| 探す文字列 | CSS 込み | CSS 無し |
+|---|---|---|
+| `dads-table`（素の部分文字列） | 74 | **6** |
+| `class="dads-table"` | 1 | **1** |
+| `--color-primitive-blue` | 45 | **0** |
+| ページ全体 | 80,844 B | 8,746 B |
+
+**どちらの `dads-table` も 0 にならない。** ビルドは両方 `0 warnings` で通る。
+だから「component を呼んだ」と「stylesheet が実際に入った」を別の検査にした。
+
+### M10 / M11 — 値の露出は 2 つの印で見る
+
+M10（値が漏れる）では `page hides other var values` だけが赤く、
+`page shows the relay target it uses` は**緑のまま**。M11（中継先を隠す）では
+その逆。**片方だけの検査だと「全部隠す」実装も「全部出す」実装も通ってしまう。**
+
+### 外した mutation を実演と数えない
+
+最初の M10 は view 側で `(:env opts)` を読ませようとしたが、`body` は
+`{:keys [routes vars mcp-url built-at]}` で分配束縛しており `opts` が**束縛されて
+いない**。これはビルドが undeclared var で落ちるだけで、「値が漏れる」ことの
+実演にはならない。**外した mutation の赤は実演ではない**ので、worker 側が
+キーの代わりに値を渡す形に**狙い直した**。
+
+### 復元の確認
+
+各 mutation のあと `diff -q` でバイト一致を確認し、**`rm -rf .shadow-cljs` して
+から** cold rebuild して sha256 が `ffa5259a…67bddb8b` に戻ることを確認した
+（5 回とも一致）。並行して他の agent が同じマシンで作業しているので、
+scratch は `mktemp -d` の下にだけ置いた。
+
+## 8. deploy
 
 ```bash
-git checkout -- kotoba/src/registry.ts       # または types.ts
-git diff --exit-code                          # exit 0 = バイト一致
-npm test                                      # 6 passed に戻る
+cd "$REPO/worker"
+npx wrangler deploy
 ```
 
-`D` と同じ形の行が `listQualitySamples` にも在る（`v.sampledAt` の方）。**消すのは
-`v.detectedAt` の方**——間違えると赤くなるテストが変わり、「実演できた」と誤読する。
+**ただし route が指すホストは解決しない**（`open-water.etzhayyim.com` は
+NXDOMAIN、2026-08-19 実測）。deploy が成功しても誰も到達できない。`/xrpc/` の
+中継先 `mcp.etzhayyim.com` も同様なので、到達できたとしても中継は **502 を返す**
+（成功と同じ形で隠さない）。
 
----
+superproject の deploy guard は `origin/main` を含む checkout からの deploy しか
+許さない点も併せて注意。**この walk では deploy していない。**
 
-## 7. 生成物と `.gitignore`
+## 9. ここに無いもの
 
-この手順を踏むと `git status` に 6 種類の生成物が出る。`.gitignore` はその 6 種だけを
-対象にしている（`node_modules/` / `.svelte-kit/` / `.wrangler/` / `package-lock.json`）。
-
-**`package-lock.json` を無視しているのは決めた結果ではなく、まだ決めていないという
-意味である。** 現状この repo の依存の固定は `kotoba/package.json` の git SHA
-（`@etzhayyim/sdk#12314a0c…` / `@etzhayyim/sdk-mock#c857ff9b…`）だけが担っていて、
-npm registry 側（`typescript ^5.6.0` / `vitest ^4.1.0` / `svelte ^5.56.0` / `vite ^8.0.15`
-など）は範囲指定のままである。**上の実測値は今日の解決結果であって、明日
-同じになる保証は無い。**
-
-## 8. 触っていない面
-
-- `worker/src/app.ts` の 9 XRPC —— ビルド経路が無いので実行して測っていない。
-  読んで `kotoba/` と突き合わせた結果は README §2。
-- `bpmn/` `dmn/` `dodaf/` `forms/` —— **`app.ts` 以外の誰も読まない**。DMN の 5 ルールを
-  両実装と手で突き合わせた（README §1 末尾）が、その照合を機械で守るものは無い。
-- `worker/src/defence-handlers.ts` —— 未配線。依存（`@etzhayyim/kotodama-host-sdk`）が
-  どの `package.json` にも宣言されていないので install もできない。
+- **`worker/src/app.ts` の 9 XRPC** —— 移行前の `worker/src/` にあり、どこにも
+  deploy されておらず（`main` が指さない、`worker/` に package.json も tsconfig も
+  無い）、`d1_databases` binding も 0 件だった。**持ち越していない**
+  （README §4）。`/dodaf` `/forms` `/_app/meta` は移行前も移行後も 404。
+- **`worker/src/defence-handlers.ts`** —— 誰も import せず、
+  `@etzhayyim/kotodama-host-sdk` の依存宣言も `HYPERDRIVE` binding も無かった。
+- **`kotoba/` の 12 関数** —— **これは撤去ではない。** appview ではない別パッケージ
+  として**そのまま在る**（7 ファイル、1 バイトも変えていない）。HTTP の入口を持た
+  ないので deploy もされない。cljs へ移すのは別の決定（README §2）。
+- **`LICENSE`** —— 移行前から実在しない。
