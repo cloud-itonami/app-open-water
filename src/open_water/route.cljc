@@ -10,7 +10,7 @@
   capability qualifies (`:native-aot`/`:wasm-aot` are pending today —
   ADR-2606290000): a route table is a decision over scalars and strings,
   which is exactly the shape that survives that move."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (def routes
   "The public surface, as data. The landing page renders THIS, so a route that
@@ -50,7 +50,7 @@
   `:page` / `:health` / `:xrpc` / `:cors-preflight` / `:not-found` /
   `:method-not-allowed` / `:bad-request` のいずれか。"
   [method path]
-  (let [m (keyword (str/lower-case (or method "get")))
+  (let [m (keyword (str/lower (or method "get")))
         p (or path "")]
     (cond
       (and (= m :options) (str/starts-with? p "/xrpc/"))
