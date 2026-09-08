@@ -1,6 +1,6 @@
 (ns open-water.route-test
   (:require [clojure.test :refer [deftest is testing]]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [open-water.route :as route]
             [open-water.view :as view]))
 
