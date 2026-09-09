@@ -22,7 +22,7 @@
 (def root (or (first (remove #(str/starts-with? % "--") *command-line-args*)) "."))
 
 (def claims
-  {:tracked-files 35
+  {:tracked-files 36
    ;; the appview = everything that is not kotoba/ and not scripts/
    :appview-ts-files 0
    :appview-svelte-artifacts 0     ; no .svelte / svelte.config / svelte/ dir survives
