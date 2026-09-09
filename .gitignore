@@ -16,3 +16,6 @@ node_modules/
 # だけが担っており、npm registry 側の依存は固定されていない。lockfile を commit
 # するかどうかは substrate 側の判断なので、ここでは触らずギャップとして残す。
 package-lock.json
+
+# nbb dependency cache -- a build artifact, not source
+.nbb/
