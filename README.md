@@ -5,7 +5,7 @@
 
 **2026-08-19 に appview を TypeScript/Svelte から ClojureScript へ移した**
 （[`docs/adr/0001`](docs/adr/0001-migrate-the-appview-from-typescript-to-clojurescript.edn)）。
-この README の数字はすべて [`scripts/verify-docs-claims.cljs`](scripts/verify-docs-claims.cljs)
+この README の数字はすべて [`scripts/verify-docs-claims.cljk`](scripts/verify-docs-claims.cljk)
 が tree から再計算して検査する。
 
 **主題は広いが、deploy される面は狭い。** いま deploy される Worker がやるのは
@@ -14,9 +14,9 @@ XRPC の中継だけで、上に書いた業務そのものはこの面には無
 ## 1. deploy されるものは、いま読んでいるソースである
 
 ```
-src/open_water/route.cljc    判断（どの handler が答えるか）  ← 純 .cljc、テスト対象
-src/open_water/view.cljc     ページ（jp-go-dds の hiccup）    ← 純 .cljc、テスト対象
-src/open_water/worker.cljs   Request/Response に触る唯一の層
+src/open_water/route.cljk    判断（どの handler が答えるか）  ← 純 .cljc、テスト対象
+src/open_water/view.cljk     ページ（jp-go-dds の hiccup）    ← 純 .cljc、テスト対象
+src/open_water/worker.cljk   Request/Response に触る唯一の層
         ↓ shadow-cljs :target :esm
 dist/worker.js               ← worker/wrangler.jsonc の "main" が指すもの
 ```
@@ -196,7 +196,7 @@ design-quality のスコアはこの区別をしない —— **デザインシ�
 ## 8. 検証
 
 ```bash
-npx --yes nbb scripts/verify-docs-claims.cljs .          # <dir> は先頭に置く
+npx --yes nbb scripts/verify-docs-claims.cljk .          # <dir> は先頭に置く
 ```
 
 exit 0 = 全一致 / 1 = 食い違い / **2 = 判定できなかった**（0 と区別する）。

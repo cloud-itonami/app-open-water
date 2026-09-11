@@ -10,7 +10,7 @@
 ;; written so the gap cannot quietly come back: the TypeScript is asserted ABSENT
 ;; by name, not merely absent from a byte total.
 ;;
-;; Usage:  nbb scripts/verify-docs-claims.cljs [<dir>]     (<dir> FIRST, default ".")
+;; Usage:  nbb scripts/verify-docs-claims.cljk [<dir>]     (<dir> FIRST, default ".")
 ;; Exit:   0 every claim holds · 1 a claim is false · 2 could not answer
 
 (require '["node:fs" :as fs]
@@ -185,8 +185,8 @@
     ;; :routes, the worker passes the real table) and NOT by forbidding a substring:
     ;; a check that forbade "routeCount" anywhere would be tripped by the docstring
     ;; that explains the old defect. A check a comment can fail is a check about prose.
-    (let [v (slurp* "src/open_water/view.cljc")
-          w (slurp* "src/open_water/worker.cljs")]
+    (let [v (slurp* "src/open_water/view.cljk")
+          w (slurp* "src/open_water/worker.cljk")]
       (if (or (nil? v) (nil? w))
         (undet! "view.cljc or worker.cljs unreadable")
         (check! :page-renders-route-table true

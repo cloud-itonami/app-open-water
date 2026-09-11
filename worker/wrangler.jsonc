@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "etzhayyim-open-water",
-  // Compiled from src/open_water/worker.cljs by shadow-cljs (:target :esm).
+  // Compiled from src/open_water/worker.cljk by shadow-cljs (:target :esm).
   // Before the cljs migration this pointed at "svelte/.svelte-kit/cloudflare/_worker.js"
   // -- a SvelteKit build output that is not in the tree -- and the TypeScript a
   // reader opened (worker/src/app.ts, 468 lines) was in no bundle at all.
