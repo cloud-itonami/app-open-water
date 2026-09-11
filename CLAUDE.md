@@ -64,10 +64,10 @@ shadow-cljs でコンパイルした `dist/worker.js` で、その公開ルー�
 出力つき）。要約:
 
 ```bash
-npx --yes nbb scripts/verify-docs-claims.cljk .                 # 文書と tree の一致
+npx --yes kbb --backend sci scripts/verify-docs-claims.cljk .                 # 文書と tree の一致
 node ~/github/com-junkawasaki/scripts/resource-guard.mjs run build -- \
-  npx --yes shadow-cljs release worker                          # dist/worker.js
-npx --yes nbb scripts/smoke-worker.cljk dist/worker.js          # 成果物を叩く
+  npx --yes amu compile --target wasm32-browser worker                          # dist/worker.js
+npx --yes kbb --backend sci scripts/smoke-worker.cljk dist/worker.js          # 成果物を叩く
 cd worker && npx --yes wrangler@latest dev --local --port 8811  # workerd で起こす
 ```
 
