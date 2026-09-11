@@ -7,7 +7,7 @@ operations (meter readings, leak reports, water quality samples). Apache-2.0.
 ## ⚠ この表は設計であって、いま deploy される面ではない
 
 **2026-08-19 に appview を TypeScript/Svelte から ClojureScript へ移した**
-（`docs/adr/0001`）。deploy される Worker は `src/open_water/worker.cljs` を
+（`docs/adr/0001`）。deploy される Worker は `src/open_water/worker.cljk` を
 shadow-cljs でコンパイルした `dist/worker.js` で、その公開ルートは
 `/` `/health` `POST /xrpc/:nsid` `OPTIONS /xrpc/*` の 4 本だけである。
 
@@ -64,10 +64,10 @@ shadow-cljs でコンパイルした `dist/worker.js` で、その公開ルー�
 出力つき）。要約:
 
 ```bash
-npx --yes nbb scripts/verify-docs-claims.cljs .                 # 文書と tree の一致
+npx --yes nbb scripts/verify-docs-claims.cljk .                 # 文書と tree の一致
 node ~/github/com-junkawasaki/scripts/resource-guard.mjs run build -- \
   npx --yes shadow-cljs release worker                          # dist/worker.js
-npx --yes nbb scripts/smoke-worker.cljs dist/worker.js          # 成果物を叩く
+npx --yes nbb scripts/smoke-worker.cljk dist/worker.js          # 成果物を叩く
 cd worker && npx --yes wrangler@latest dev --local --port 8811  # workerd で起こす
 ```
 

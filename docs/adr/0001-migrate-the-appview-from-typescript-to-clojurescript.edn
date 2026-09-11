@@ -42,9 +42,9 @@ runtime 順序は kotoba wasm > clojurewasm > ClojureScript > nbb で、TypeScri
 
 **appview を ClojureScript に移し、appview の TypeScript と Svelte を撤去する。**
 
-    src/open_water/route.cljc    判断（どの handler が答えるか）
-    src/open_water/view.cljc     ページ（jp-go-dds の hiccup）
-    src/open_water/worker.cljs   Request/Response に触る唯一の層
+    src/open_water/route.cljk    判断（どの handler が答えるか）
+    src/open_water/view.cljk     ページ（jp-go-dds の hiccup）
+    src/open_water/worker.cljk   Request/Response に触る唯一の層
             ↓ shadow-cljs :target :esm
     dist/worker.js               worker/wrangler.jsonc の main が指すもの
 
@@ -156,8 +156,8 @@ shadow.resource/inline で bundle に焼く（design system の外部リクエ�
 - ページ描画 → design-quality **100.00**（10 軸）、`--extra-axes` **100.00**（12 軸）、gate PASS
 - `shadow-cljs release worker`: **55 files / 12 compiled / 0 warnings / 5.57s**、
   `dist/worker.js` 246,372 バイト
-- `scripts/smoke-worker.cljs`: ビルド済み bundle を import して **20 項目**すべて PASS
-- `scripts/verify-docs-claims.cljs`: **21 claim** すべて PASS、exit 0
+- `scripts/smoke-worker.cljk`: ビルド済み bundle を import して **20 項目**すべて PASS
+- `scripts/verify-docs-claims.cljk`: **21 claim** すべて PASS、exit 0
 - **workerd（`wrangler dev --local`）で全 route を実際に叩いた** ——
   Node で bundle を import する smoke より強い証拠である
 

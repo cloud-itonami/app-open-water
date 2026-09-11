@@ -20,7 +20,7 @@ Cloudflare のアカウントは要らない（deploy だけが要る。§8）�
 git clone git@github.com:cloud-itonami/app-open-water.git
 cd app-open-water
 REPO=$PWD
-npx --yes nbb scripts/verify-docs-claims.cljs .
+npx --yes nbb scripts/verify-docs-claims.cljk .
 ```
 
 実際の出力（末尾）:
@@ -179,7 +179,7 @@ sha256 `ffa5259a04a59627414e7642f69f7059e31cb280193238f643f8665a67bddb8b`。
 ここが deploy されるものに触る唯一の検査である。
 
 ```bash
-cd "$REPO" && npx --yes nbb scripts/smoke-worker.cljs dist/worker.js
+cd "$REPO" && npx --yes nbb scripts/smoke-worker.cljk dist/worker.js
 ```
 
 実際の出力:
@@ -211,7 +211,7 @@ OK	the built bundle answers as the route table says
 **bundle が無ければ exit 2**（「判定できなかった」であって合格ではない）:
 
 ```
-$ npx --yes nbb scripts/smoke-worker.cljs dist/nonexistent.js ; echo $?
+$ npx --yes nbb scripts/smoke-worker.cljk dist/nonexistent.js ; echo $?
 UNDETERMINED	no bundle at /…/dist/nonexistent.js
 Refusing to report a pass: build it first (see docs/operator-quickstart.md S4).
 2
