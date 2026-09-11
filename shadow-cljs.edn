@@ -8,7 +8,7 @@
 ;; the TypeScript a reader opened (worker/src/app.ts, 468 lines) was in no bundle.
 ;;
 ;; :warnings-as-errors is not decoration. shadow treats an undeclared or renamed
-;; var as a WARNING, so `shadow-cljs release worker` exits 0 while writing a
+;; var as a WARNING, so `amu compile --target wasm32-browser worker` exits 0 while writing a
 ;; bundle that misbehaves on the first request. "The build succeeded" is
 ;; therefore not a check at all -- it cannot fail. Demonstrated in THIS repo
 ;; before landing this line (docs/operator-quickstart.md S4).

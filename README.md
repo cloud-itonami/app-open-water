@@ -196,7 +196,7 @@ design-quality のスコアはこの区別をしない —— **デザインシ�
 ## 8. 検証
 
 ```bash
-npx --yes nbb scripts/verify-docs-claims.cljk .          # <dir> は先頭に置く
+npx --yes kbb --backend sci scripts/verify-docs-claims.cljk .          # <dir> は先頭に置く
 ```
 
 exit 0 = 全一致 / 1 = 食い違い / **2 = 判定できなかった**（0 と区別する）。
