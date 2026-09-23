@@ -1,5 +1,5 @@
 (ns open-water.route-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotoba.lang.text :as str]
             [open-water.route :as route]
             [open-water.view :as view]))
