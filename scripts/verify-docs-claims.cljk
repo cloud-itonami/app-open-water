@@ -43,7 +43,7 @@
    :shadow-export "open-water.worker/handler"})
 
 ;; Identity / custody files this repository still carries BYTE-IDENTICAL.
-;; worker/wrangler.jsonc and CLAUDE.md left this set deliberately -- both were
+;; worker/wrangler.jsonc and AGENTS.md left this set deliberately -- both were
 ;; changed by the migration -- and are checked by CONTENT below instead of by hash,
 ;; so an intentional change and a stray change stay distinguishable.
 (def preserved
@@ -139,10 +139,10 @@
     (check! :declaration-files (:declaration-files claims)
             (count (filter #(re-find #"^(bpmn|dmn|dodaf|forms)/" %) files)))
 
-    ;; CLAUDE.md no longer claims a TypeScript runtime it no longer has
-    (let [c (slurp* "CLAUDE.md")]
+    ;; AGENTS.md no longer claims a TypeScript runtime it no longer has
+    (let [c (slurp* "AGENTS.md")]
       (if (nil? c)
-        (undet! "CLAUDE.md unreadable")
+        (undet! "AGENTS.md unreadable")
         (check! :claude-md-describes-cljs true
                 (and (not (str/includes? c "Single CF Worker (`src/app.ts`)"))
                      (str/includes? c "shadow-cljs")))))

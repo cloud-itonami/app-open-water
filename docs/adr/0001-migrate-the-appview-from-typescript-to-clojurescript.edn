@@ -33,7 +33,7 @@
 つまり「読めるもの」「deploy されるもの」「表示されるもの」の 3 つが全部
 食い違っていた。
 
-この workspace の正本言語は cljs と kotoba である。superproject CLAUDE.md の
+この workspace の正本言語は cljs と kotoba である。superproject AGENTS.md の
 runtime 順序は kotoba wasm > clojurewasm > ClojureScript > nbb で、TypeScript は
 そこに無い。候補（`app.ts` / SvelteKit）はどちらも TypeScript なので、どちらを
 選んでも正本には着地しない。
@@ -208,7 +208,7 @@ SvelteKit のビルドが無くなった今は存在しない）。
 - `kotoba/` の 7 ファイルは 1 バイトも変わっていない（sha256 を検証器に固定）。
   identity/custody の 3 ファイル（README.edn / migration.edn /
   worker/kotodama.jsonld）も同様。
-- `worker/wrangler.jsonc` と `CLAUDE.md` は**意図的に変更**した。この 2 つは
+- `worker/wrangler.jsonc` と `AGENTS.md` は**意図的に変更**した。この 2 つは
   byte 一致の集合から外し、**内容で検査する** —— 意図的な変更と勝手な変更を
   区別するためである。
 - ホストは相変わらず NXDOMAIN である（`open-water.etzhayyim.com` も

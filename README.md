@@ -219,6 +219,6 @@ exit 0 = 全一致 / 1 = 食い違い / **2 = 判定できなかった**（0 と
    まま。** この `README.md` / `docs/` / `src/` / `test/` / `scripts/` は列挙されて
    いない。切り出し契約の更新漏れであり、custody ファイルを勝手に書き換えない方針
    なのでここに記録するに留める（fleet の他 repo と同じ扱い）。
-5. **`dmn/quality-alarm.dmn` が存在しない。** `CLAUDE.md` は
+5. **`dmn/quality-alarm.dmn` が存在しない。** `AGENTS.md` は
    「Quality alarm by DMN」と書くが `dmn/` に在るのは `leak-severity.dmn` 1 本
    だけである。移行前からの状態。
